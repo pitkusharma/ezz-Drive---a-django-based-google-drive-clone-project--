@@ -131,5 +131,13 @@ LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
 
 
+##############################################
+##############################################
+##############################################
 # crispy forms
 CRISPY_TEMPLATE_PACK = 'bootstrap4' # crispy forms required constant
+
+
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'

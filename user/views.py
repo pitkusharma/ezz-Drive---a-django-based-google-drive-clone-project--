@@ -54,7 +54,10 @@ def login_user(request):
             )
             login(request, user)
             
-            return HttpResponseRedirect(reverse("drive:home")) 
+            return HttpResponseRedirect(reverse("drive:home", 
+            kwargs={
+                "folder": 1
+            })) 
 
         return render(request, "user/login.html", context)
 

@@ -1,11 +1,11 @@
 from django.db import models
-# from django.contrib.auth.models import User
 from user.models import UserProfile
+from django.contrib.auth.models import User
 
 
 class Folder(models.Model):
     user = models.ForeignKey(
-        UserProfile, 
+        User, 
         on_delete = models.CASCADE
         )
     parent_folder = models.IntegerField(
@@ -19,19 +19,24 @@ class Folder(models.Model):
         return self.name
 
 
+def user_directory_path(instance, filename):
+    return "user_{0}/{1}".format(instance.folder.user.id,filename) 
+
 class File(models.Model):
-    folder = models.ForeignKey(
-        Folder,
-        on_delete = models.CASCADE
-    )
+    file = models.FileField(
+        upload_to = user_directory_path
+        )
     name = models.CharField(
         max_length = 100
     )
-    date_of_upload = models.DateTimeField()
     size = models.IntegerField()
-    file = models.FileField()
+    date_of_upload = models.DateTimeField()
+    folder = models.ForeignKey(
+        Folder,
+        on_delete = models.CASCADE
+        )
+    
     def __str__(self) -> str:
         return self.name    
 
 
-# Create your models here.
