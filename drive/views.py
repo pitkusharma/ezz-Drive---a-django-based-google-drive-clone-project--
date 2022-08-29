@@ -3,11 +3,12 @@ from datetime import datetime
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 
 from .forms import *
 from .models import *
 
-
+@login_required
 def home(request, *args, **kwargs):
 
     if request.method == "GET":
@@ -18,6 +19,8 @@ def home(request, *args, **kwargs):
         try:
             folder = Folder.objects.get(id = kwargs["folder"])
             context["folder"] = folder.id
+            if folder.user != request.user:
+                return HttpResponseRedirect(reverse("drive:home-default"))    
         except:
             folder = Folder.objects.get(user = request.user, parent_folder = None)
             return HttpResponseRedirect(reverse("drive:home",
@@ -38,8 +41,8 @@ def home(request, *args, **kwargs):
         folder_list = Folder.objects.filter(parent_folder = folder.id).order_by("id")
         context["folder_list"] = folder_list
         
-        if not "order" in request.session  \
-        and not "reverse" in request.session:
+        if (not "order" in request.session  
+        and not "reverse" in request.session):
             request.session["order"] = "date"
             request.session["reverse"] = False
         
@@ -87,11 +90,15 @@ def home(request, *args, **kwargs):
             "folder": kwargs["folder"]
         }))
 
-
+@login_required
 def file_upload(request, *args, **kwargs):
 
     if request.method == "POST":
         folder = Folder.objects.get(id = kwargs["folder"])
+        
+        if folder.user != request.user:
+            return HttpResponseRedirect(reverse("drive:home-default"))
+
         date_time = datetime.now()
         file = request.FILES.getlist("file_upload")
         for i in file:
@@ -110,20 +117,24 @@ def file_upload(request, *args, **kwargs):
                 'folder': folder.id
                 } ))
 
-
+@login_required
 def create_folder(request, *args, **kwargs):
 
     if request.method == "POST":
         form = FolderForm(request.POST)
-        parent_folder = kwargs["folder"]
 
         if form.is_valid():
+            folder = Folder.objects.get(id = form.cleaned_data["folder"])
+
+            if folder.user != request.user:
+                return HttpResponseRedirect(reverse("drive:home-default"))
+
             user = request.user
             name = form.cleaned_data.get("name")
 
             new_entry = Folder(
                 user = user,
-                parent_folder = parent_folder,
+                parent_folder = folder.id,
                 name = name
             )
             new_entry.save()
@@ -131,14 +142,15 @@ def create_folder(request, *args, **kwargs):
         return HttpResponseRedirect(reverse(
         "drive:home", 
         kwargs={
-            'folder': parent_folder
+            'folder': folder.id
             } ))
 
-
+@login_required
 def rename_file(request, *args, **kwargs):
     file = File.objects.get(id = kwargs["id"])
+
     if request.user != file.folder.user:
-        return HttpResponseRedirect(reverse("user:login"))
+        return HttpResponseRedirect(reverse("drive:home-default"))
     
     if request.method == "POST":
         form = RenameForm(request.POST)
@@ -157,11 +169,13 @@ def rename_file(request, *args, **kwargs):
             "folder": file.folder.id
         }))
 
+@login_required
 def delete_file(request, *args, **kwargs):
     file = File.objects.get(id = kwargs["id"])
+
     if request.user != file.folder.user:
-        return HttpResponseRedirect(reverse("user:login"))
-    
+        return HttpResponseRedirect(reverse("drive:home-default"))
+
     if request.method == "GET":
         folder = file.folder.id
         file.delete()
@@ -169,11 +183,12 @@ def delete_file(request, *args, **kwargs):
             "folder": folder
         }))
 
-
+@login_required
 def rename_folder(request, *args, **kwargs):
     folder = Folder.objects.get(id = kwargs["id"])
+    
     if request.user != folder.user:
-        return HttpResponseRedirect(reverse("user:login"))
+        return HttpResponseRedirect(reverse("drive:home-default"))
     
     if request.method == "POST":
         form = RenameForm(request.POST)
@@ -186,11 +201,12 @@ def rename_folder(request, *args, **kwargs):
             "folder": folder.parent_folder
         }))
 
+@login_required
 def delete_folder(request, *args, **kwargs):
     folder = Folder.objects.get(id = kwargs["id"])
  
     if request.user != folder.user:
-        return HttpResponseRedirect(reverse("user:login"))
+        return HttpResponseRedirect(reverse("drive:home-default"))
     
     if request.method == "GET":
         parent_folder = folder.parent_folder

@@ -21,6 +21,14 @@ class Folder(models.Model):
 def user_directory_path(instance, filename):
     return "user_{0}/{1}".format(instance.folder.user.id,filename) 
 
+
+# class CustomManager(models.Manager):
+#     def delete(self):
+#         print(self.name)
+#         for obj in self.get_queryset():
+#             obj.delete()
+
+
 class File(models.Model):
     file = models.FileField(
         upload_to = user_directory_path
@@ -34,8 +42,16 @@ class File(models.Model):
         Folder,
         on_delete = models.CASCADE
         )
+
+    # objects = CustomManager()
+
+    def delete(self, using=None, keep_parents=False):
+        print(self.name)
+        self.file.storage.delete(self.file.name)
+        super().delete()
     
     def __str__(self) -> str:
         return self.name    
+
 
 
