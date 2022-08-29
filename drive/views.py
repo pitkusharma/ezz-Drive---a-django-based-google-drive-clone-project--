@@ -14,8 +14,78 @@ def home(request, *args, **kwargs):
         context = {}
         context["folder_form"] = FolderForm()
         context["file_form"] = FileForm()
-        context["folder"] = kwargs["folder"]
+        
+        try:
+            folder = Folder.objects.get(id = kwargs["folder"])
+            context["folder"] = folder.id
+        except:
+            folder = Folder.objects.get(user = request.user, parent_folder = None)
+            return HttpResponseRedirect(reverse("drive:home",
+            kwargs = {
+                "folder": folder.id
+            }))
+
+        folder_stack = []
+        folder_stack.append(folder)
+
+        temp = folder
+        while temp.parent_folder != None:
+            temp = Folder.objects.get(id = temp.parent_folder)
+            folder_stack.append(temp)
+        
+        context["folder_stack"] = folder_stack[::-1]
+
+        folder_list = Folder.objects.filter(parent_folder = folder.id).order_by("id")
+        context["folder_list"] = folder_list
+        
+        if not "order" in request.session  \
+        and not "reverse" in request.session:
+            request.session["order"] = "date"
+            request.session["reverse"] = False
+        
+        if request.session["order"] == "date":
+            if request.session["reverse"] == True:
+                files = File.objects.filter(folder = folder).order_by("date_of_upload")
+            else:
+                files = File.objects.filter(folder = folder).order_by("-date_of_upload")
+        
+        elif request.session["order"] == "name":
+            if request.session["reverse"] == True:
+                files = File.objects.filter(folder = folder).order_by("-name")
+            else:
+                files = File.objects.filter(folder = folder).order_by("name")
+        
+        elif request.session["order"] == "size":
+            if request.session["reverse"] == True:
+                files = File.objects.filter(folder = folder).order_by("-size")
+            else:
+                files = File.objects.filter(folder = folder).order_by("size")
+
+        else:
+            files = File.objects.filter(folder = folder).order_by("-date_of_upload")
+
+        context["files"] = files
+
+        param_dict = {
+            "order": request.session["order"],
+            "reverse": request.session["reverse"]
+        }
+        params_form = SetParameterForm(initial = param_dict)
+        context["params_form"] = params_form
+
+        context["rename_form"] = RenameForm()
+
         return render(request, "drive/home.html", context)
+
+    elif request.method == "POST":
+        form = SetParameterForm(request.POST)
+        if form.is_valid():
+            request.session["order"] = form.cleaned_data["order"]
+            request.session["reverse"] = form.cleaned_data["reverse"]
+
+        return HttpResponseRedirect(reverse("drive:home", kwargs={
+            "folder": kwargs["folder"]
+        }))
 
 
 def file_upload(request, *args, **kwargs):
@@ -25,19 +95,15 @@ def file_upload(request, *args, **kwargs):
         date_time = datetime.now()
         file = request.FILES.getlist("file_upload")
         for i in file:
-            try:
-                new_entry = File(
-                file = i, 
-                name = i.name,
-                size = i.size,
-                date_of_upload = date_time,
-                folder = folder
-                )
-                new_entry.save()
-            except:
-                continue
-
-
+            new_entry = File(
+            file = i, 
+            name = i.name,
+            size = i.size,
+            date_of_upload = date_time,
+            folder = folder
+            )
+            new_entry.save()
+            
         return HttpResponseRedirect(reverse(
             "drive:home", 
             kwargs={
@@ -67,3 +133,72 @@ def create_folder(request, *args, **kwargs):
         kwargs={
             'folder': parent_folder
             } ))
+
+
+def rename_file(request, *args, **kwargs):
+    file = File.objects.get(id = kwargs["id"])
+    if request.user != file.folder.user:
+        return HttpResponseRedirect(reverse("user:login"))
+    
+    if request.method == "POST":
+        form = RenameForm(request.POST)
+        if form.is_valid():
+            temp = ""
+            for i in file.name[::-1]:
+                if i != ".":
+                    temp = i + temp
+                else:
+                    temp = i + temp
+                    break
+            file.name = form.cleaned_data["name"] + temp
+            file.save()
+        
+        return HttpResponseRedirect(reverse("drive:home", kwargs={
+            "folder": file.folder.id
+        }))
+
+def delete_file(request, *args, **kwargs):
+    file = File.objects.get(id = kwargs["id"])
+    if request.user != file.folder.user:
+        return HttpResponseRedirect(reverse("user:login"))
+    
+    if request.method == "GET":
+        folder = file.folder.id
+        file.delete()
+        return HttpResponseRedirect(reverse("drive:home", kwargs={
+            "folder": folder
+        }))
+
+
+def rename_folder(request, *args, **kwargs):
+    folder = Folder.objects.get(id = kwargs["id"])
+    if request.user != folder.user:
+        return HttpResponseRedirect(reverse("user:login"))
+    
+    if request.method == "POST":
+        form = RenameForm(request.POST)
+        if form.is_valid():
+            
+            folder.name = form.cleaned_data["name"] 
+            folder.save()
+        
+        return HttpResponseRedirect(reverse("drive:home", kwargs={
+            "folder": folder.parent_folder
+        }))
+
+def delete_folder(request, *args, **kwargs):
+    folder = Folder.objects.get(id = kwargs["id"])
+ 
+    if request.user != folder.user:
+        return HttpResponseRedirect(reverse("user:login"))
+    
+    if request.method == "GET":
+        parent_folder = folder.parent_folder
+        folder.delete()
+ 
+        return HttpResponseRedirect(reverse("drive:home", kwargs={
+            "folder": parent_folder
+        }))
+
+        
+

@@ -14,6 +14,20 @@ Home
         border-radius: 15px;
         cursor: pointer;
     }
+    .folders{
+        display: inline-block;
+        text-align: center;
+        color: #222;
+        margin: 20px 20px;
+    }
+    
+    .files{
+        color: #222;
+        margin: 0 20px;
+        min-width: 100%;
+        {% comment %} min-height: 75px; {% endcomment %}
+    }
+
 </style>
 
 {% endblock custom_header %}
@@ -32,10 +46,7 @@ Home
     {{folder_form | crispy }}
     <button class="btn btn-outline-primary d-block mx-auto my-2" style="width: 100%;" >
         Create
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-folder-plus" viewBox="0 0 16 16">
-            <path d="m.5 3 .04.87a1.99 1.99 0 0 0-.342 1.311l.637 7A2 2 0 0 0 2.826 14H9v-1H2.826a1 1 0 0 1-.995-.91l-.637-7A1 1 0 0 1 2.19 4h11.62a1 1 0 0 1 .996 1.09L14.54 8h1.005l.256-2.819A2 2 0 0 0 13.81 3H9.828a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 6.172 1H2.5a2 2 0 0 0-2 2zm5.672-1a1 1 0 0 1 .707.293L7.586 3H2.19c-.24 0-.47.042-.683.12L1.5 2.98a1 1 0 0 1 1-.98h3.672z"/>
-            <path d="M13.5 10a.5.5 0 0 1 .5.5V12h1.5a.5.5 0 1 1 0 1H14v1.5a.5.5 0 1 1-1 0V13h-1.5a.5.5 0 0 1 0-1H13v-1.5a.5.5 0 0 1 .5-.5z"/>
-          </svg>
+        <i class="bi bi-folder-plus"></i>
     </button>
 </form>
 
@@ -45,11 +56,7 @@ Home
     
     <label for="file_upload" id="file_upload_label" style="input: cursor;">
         <span style="color: #333; font-size: 0.8em;">Select File</span> <br>
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"
-         fill="currentColor" class="bi bi-cloud-arrow-up" viewBox="0 0 16 16">
-            <path fill-rule="evenodd" d="M7.646 5.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 6.707V10.5a.5.5 0 0 1-1 0V6.707L6.354 7.854a.5.5 0 1 1-.708-.708l2-2z"/>
-            <path d="M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H3.781C1.708 13 0 11.366 0 9.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383zm.653.757c-.757.653-1.153 1.44-1.153 2.056v.448l-.445.049C2.064 6.805 1 7.952 1 9.318 1 10.785 2.23 12 3.781 12h8.906C13.98 12 15 10.988 15 9.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 4.825 10.328 3 8 3a4.53 4.53 0 0 0-2.941 1.1z"/>
-        </svg>
+        <i class="bi bi-cloud-arrow-down" style="font-size:1.8em"></i>
         <div id="selected_files" style="font-size: 0.8em;"></div>
         <input type="file" name="file_upload" style="display: none;"
         id="file_upload" onchange="javascript:updateList()" multiple = true
@@ -58,21 +65,108 @@ Home
 
     <button class="btn btn-primary d-block mx-auto my-2" style="width: 100%;" >
         Upload
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" 
-         fill="currentColor" class="bi bi-upload" viewBox="0 0 16 16">
-            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-            <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
-          </svg>
+        <i class="bi bi-upload"></i>
     </button>
 </form>
 
+<form action="{%url "user:logout"%}" method="post">
+    {% csrf_token %}
+    <button class="btn btn-outline-dark" style="width: 100%">
+        Log out
+        <i class="bi bi-box-arrow-in-right"></i>
+    </button>
+</form>
+<hr>
+<div class="p-3" style="font-size: 0.8em;">
+    <form action="" method="post">
+        {% csrf_token %}
+        {{params_form }}
+        <button class="btn btn-outline-dark mx-2" style="min-width: 100px;">
+            Set
+        </button>
+    </form>
+</div>
 
 {% endblock side_panel %}
 
 {% block main_panel %}
-<h2>
-    Main Panel
-</h2>
+
+<div class="m-3">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+        {% for i in folder_stack %}
+            <li class="breadcrumb-item">
+                <a href="{%url "drive:home" i.id%}" style="text-decoration: none;">    
+                    {{i.name}}
+                </a> 
+            </li>
+        {% endfor %}
+        </ol>
+    </nav>
+</div>
+
+<div class="p-4">
+    {% for i in folder_list %}
+    <div class="d-inline-block">
+        <div class="folders">
+            <a href="{%url "drive:home" i.id%}" style="text-decoration: none;">
+                <img src="../../static/img/folder_icon.png" width ="75" alt="" srcset=""
+                style="display: block;">
+            </a>
+            <div class="dropdown d-inline">
+                <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                style="border: none;background: none; font-size: 0.8em;color: #333;">
+                <span>{{i.name}}</span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><div class="dropdown-item" >
+                        <form action="{%url "drive:rename-folder" i.id%}" method="post">
+                            {% csrf_token %}
+                            {{rename_form | crispy}} <button class="btn btn-secondary">Rename</button>
+                        </form>
+                    </div></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{%url "drive:delete-folder" i.id%}">Delete</a></li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+    {% endfor %}
+
+    {% for i in files %}
+    
+        <div class="files">
+            <hr>
+            <i class="bi bi-file-earmark"></i> {{i.name}}
+
+            <div class="btn-group dropstart d-inline float-end">
+                <button class="btn btn-outline-dark dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{i.file.url}}" >Preview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{{i.file.url}}" download>Download</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><div class="dropdown-item" >
+                        <form action="{%url "drive:rename-file" i.id%}" method="post">
+                            {% csrf_token %}
+                            {{rename_form | crispy}} <button class="btn btn-secondary">Rename</button>
+                        </form>
+                    </div></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{%url "drive:delete-file" i.id%}">Delete</a></li>
+                </ul>
+            </div>
+            
+        </div>
+    
+    {% endfor %}
+
+
+</div>
+
+
 {% endblock main_panel %}
 
 

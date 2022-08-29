@@ -2,9 +2,12 @@ from django import forms
 # from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
+from requests import request
+
+from user.models import UserProfile
 
 
-class UserProfileForm(forms.Form):
+class SignupForm(forms.Form):
     first_name = forms.CharField(
         required=False,
         max_length=20
@@ -44,7 +47,6 @@ class UserProfileForm(forms.Form):
             raise forms.ValidationError("Password didn't matched")
 
         for i in self.cleaned_data.items():
-            print(i)
             if i[1] == "" or not i[1] :
                 raise forms.ValidationError(
                     "Required Fields need to be filled: {}"
@@ -70,5 +72,36 @@ class LoginForm(forms.Form):
             raise forms.ValidationError("Invalid Credentials")
 
 
-        
+class UserForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = (
+            "first_name", 
+            "last_name",
+            "email",
+            "username",
+            )        
+
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ("gender",)
+
+
+class PasswordChange(forms.Form):
+    password = forms.CharField(
+        widget=forms.PasswordInput(),
+        label="Enter New Password")
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(),
+        label="Renter Password")
+
+    def clean(self):
+        super().clean()
+        if self.cleaned_data.get("password") != self.cleaned_data.get("confirm_password"):  
+            raise forms.ValidationError("Password didn't matched")
+
+
+
 

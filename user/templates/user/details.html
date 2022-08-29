@@ -1,0 +1,39 @@
+{% extends 'drive/base.html' %}
+
+{% block title %}
+{{user.first_name}}
+{% endblock title %}
+
+{% block main_panel %}
+<div class="p-3 col-12 col-md-6">
+    <h2>{{user.first_name}}  {{user.last_name}}</h2>
+    <hr>
+    <div class = "m-3">
+        Email: {{user.email}} 
+    </div>
+    <div class = "m-3">
+        Gender: {{user.userprofile.gender}}
+    </div>
+    <div class = "m-3">
+        Username: {{user.username}} 
+    </div>
+    
+    <div>
+        <a href="{%url "user:edit"%}" style="text-decoration: none;">
+            <button class = "btn btn-outline-primary m-3">
+                Edit Details
+                <i class="bi bi-pencil-square"></i>
+            </button>
+        </a> 
+        <a href="{%url "user:password-change"%}" style="text-decoration: none;">
+            <button class = "btn btn-outline-danger m-3">
+                Change Password
+                <i class="bi bi-key"></i>
+            </button>
+        </a> 
+    </div>
+
+    
+
+</div>
+{% endblock main_panel %}
