@@ -144,9 +144,9 @@ Home
                 <button class="btn btn-outline-dark dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                 </button>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" target="blank" href="{{i.file.url}}" >Preview</a></li>
+                    <li><a class="dropdown-item" target="blank" href="{%url "drive:download-file" i.id%}" >Preview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="{{i.file.url}}" download>Download</a></li>
+                    <li><a class="dropdown-item" href="{%url "drive:download-file" i.id%}" download>Download</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><div class="dropdown-item" >
                         <form action="{%url "drive:rename-file" i.id%}" method="post">

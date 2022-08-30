@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, FileResponse
 from django.urls import reverse
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
@@ -124,7 +124,7 @@ def create_folder(request, *args, **kwargs):
         form = FolderForm(request.POST)
 
         if form.is_valid():
-            folder = Folder.objects.get(id = form.cleaned_data["folder"])
+            folder = Folder.objects.get(id = kwargs["folder"])
 
             if folder.user != request.user:
                 return HttpResponseRedirect(reverse("drive:home-default"))
@@ -168,6 +168,17 @@ def rename_file(request, *args, **kwargs):
         return HttpResponseRedirect(reverse("drive:home", kwargs={
             "folder": file.folder.id
         }))
+
+@login_required
+def download_file(request, *args, **kwargs):
+    file = File.objects.get(id = kwargs["id"])
+
+    if request.user != file.folder.user:
+        return HttpResponseRedirect(reverse("drive:home-default"))
+
+    if request.method == "GET":
+        
+        return FileResponse(file.file)
 
 @login_required
 def delete_file(request, *args, **kwargs):

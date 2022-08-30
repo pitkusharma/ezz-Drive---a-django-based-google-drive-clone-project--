@@ -13,5 +13,6 @@ urlpatterns = [
 
     path("file-upload/<int:folder>/", file_upload, name = "file-upload"),
     path("rename-file/<int:id>/", rename_file, name = "rename-file"),
+    path("download-file/<int:id>/", download_file, name = "download-file"),
     path("delete-file/<int:id>/", delete_file, name = "delete-file"),
 ]
